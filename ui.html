@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVG Library Exporter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 16px;
+      margin: 0;
+      font-size: 12px;
+    }
+    
+    h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .section {
+      border-bottom: 1px solid #e5e5e5;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+    
+    .selection-info {
+      font-size: 11px;
+      color: #666;
+      padding: 8px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    
+    .selection-count {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .selection-items {
+      margin-top: 4px;
+      font-size: 10px;
+      color: #888;
+    }
+    
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    input[type="checkbox"],
+    input[type="radio"] {
+      cursor: pointer;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    button {
+      background: #18A0FB;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+      transition: background 0.15s;
+    }
+    
+    button:hover {
+      background: #0d8fe0;
+    }
+    
+    button:active {
+      background: #0b7ec4;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    button.secondary {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    
+    button.secondary:hover {
+      background: #f5f5f5;
+    }
+    
+    button.secondary:active {
+      background: #e5e5e5;
+    }
+    
+    .status {
+      font-size: 11px;
+      padding: 8px;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .status.visible {
+      display: block;
+    }
+    
+    .status.info {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status.warning {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .progress {
+      display: none;
+      margin-top: 8px;
+    }
+    
+    .progress.visible {
+      display: block;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #e5e5e5;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: #18A0FB;
+      transition: width 0.2s;
+    }
+    
+    .progress-text {
+      font-size: 10px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>SVG Library Exporter</h2>
+    
+    <div class="section">
+      <div id="selection-info" class="selection-info">
+        <div class="selection-count">No selection</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="options">
+        <div class="option-row">
+          <label>
+            <input type="radio" name="export-type" value="selection" checked>
+            Export selected items
+          </label>
+        </div>
+        <div class="option-row">
+          <label>
+            <input type="radio" name="export-type" value="page">
+            Export entire page
+          </label>
+        </div>
+        <div class="option-row">
+          <label>
+            <input type="checkbox" id="include-nested" checked>
+            Include nested items
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="button-group">
+        <button id="export-individual-btn">Export Files</button>
+        <button id="export-zip-btn" class="secondary">Export ZIP</button>
+      </div>
+    </div>
+    
+    <div id="progress" class="progress">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <div id="progress-text" class="progress-text">Processing...</div>
+    </div>
+    
+    <div id="status" class="status"></div>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    let currentExportData = null;
+    
+    // Get export options
+    function getExportOptions() {
+      const exportType = document.querySelector('input[name="export-type"]:checked').value;
+      const includeNested = document.getElementById('include-nested').checked;
+      return { exportType, includeNested };
+    }
+    
+    // Update selection info display
+    function updateSelectionInfo(info) {
+      const container = document.getElementById('selection-info');
+      if (info.count === 0) {
+        container.innerHTML = '<div class="selection-count">No selection</div>';
+      } else {
+        const items = info.items.join(', ');
+        const more = info.hasMore ? ` (+${info.count - 5} more)` : '';
+        container.innerHTML = `
+          <div class="selection-count">${info.count} item${info.count > 1 ? 's' : ''} selected</div>
+          <div class="selection-items">${items}${more}</div>
+        `;
+      }
+    }
+    
+    // Show status message
+    function showStatus(message, level = 'info') {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status visible ${level}`;
+    }
+    
+    // Update progress
+    function updateProgress(current, total, itemName) {
+      const progressEl = document.getElementById('progress');
+      const progressFill = document.getElementById('progress-fill');
+      const progressText = document.getElementById('progress-text');
+      
+      progressEl.classList.add('visible');
+      const percent = (current / total) * 100;
+      progressFill.style.width = `${percent}%`;
+      progressText.textContent = `Exporting ${current}/${total}: ${itemName}`;
+    }
+    
+    // Hide progress
+    function hideProgress() {
+      document.getElementById('progress').classList.remove('visible');
+    }
+    
+    // Download a single file
+    function downloadFile(fileName, content, mimeType = 'image/svg+xml') {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
+    // Download all files individually
+    function downloadAllFiles(exportData) {
+      exportData.forEach((item, index) => {
+        setTimeout(() => {
+          downloadFile(item.fileName, item.svg);
+        }, index * 100); // Stagger downloads slightly
+      });
+    }
+    
+    // Download as ZIP
+    async function downloadAsZip(exportData) {
+      try {
+        showStatus('Creating ZIP file...', 'info');
+        
+        const zip = new JSZip();
+        
+        // Add each SVG to the ZIP
+        exportData.forEach(item => {
+          zip.file(item.fileName, item.svg);
+        });
+        
+        // Generate ZIP
+        const content = await zip.generateAsync({ type: 'blob' });
+        
+        // Download
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        downloadFile(`svg-export-${timestamp}.zip`, content, 'application/zip');
+        
+        showStatus(`Successfully created ZIP with ${exportData.length} file(s)`, 'success');
+      } catch (error) {
+        showStatus(`Error creating ZIP: ${error.message}`, 'error');
+      }
+    }
+    
+    // Event listeners
+    document.getElementById('export-individual-btn').onclick = () => {
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'export-svg', 
+          options: getExportOptions() 
+        } 
+      }, '*');
+    };
+    
+    document.getElementById('export-zip-btn').onclick = () => {
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'export-svg', 
+          options: getExportOptions() 
+        } 
+      }, '*');
+    };
+    
+    // Handle messages from plugin
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      
+      if (msg.type === 'selection-info') {
+        updateSelectionInfo(msg);
+      } else if (msg.type === 'status') {
+        showStatus(msg.message, msg.level || 'info');
+        if (msg.level === 'success' || msg.level === 'error') {
+          hideProgress();
+        }
+      } else if (msg.type === 'progress') {
+        updateProgress(msg.current, msg.total, msg.itemName);
+      } else if (msg.type === 'export-complete') {
+        hideProgress();
+        currentExportData = msg.data;
+        
+        // Determine which button was clicked by checking if ZIP button was recently clicked
+        const zipBtn = document.getElementById('export-zip-btn');
+        const individualBtn = document.getElementById('export-individual-btn');
+        
+        // Use a simple flag to determine export type
+        if (window.lastClickedButton === 'zip') {
+          downloadAsZip(msg.data);
+        } else {
+          downloadAllFiles(msg.data);
+        }
+        
+        // Show errors if any
+        if (msg.errors && msg.errors.length > 0) {
+          console.warn('Export errors:', msg.errors);
+        }
+      }
+    };
+    
+    // Track which button was clicked
+    document.getElementById('export-zip-btn').addEventListener('click', () => {
+      window.lastClickedButton = 'zip';
+    });
+    
+    document.getElementById('export-individual-btn').addEventListener('click', () => {
+      window.lastClickedButton = 'individual';
+    });
+    
+    // Request initial selection info
+    parent.postMessage({ pluginMessage: { type: 'get-selection-info' } }, '*');
+  </script>
+</body>
+</html>
