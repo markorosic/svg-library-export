@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>SVG Library Exporter</title>
+  <title>Design Asset Exporter</title>
   <style>
     * {
       box-sizing: border-box;
@@ -192,7 +192,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>SVG Library Exporter</h2>
+    <h2>Design Asset Exporter</h2>
     
     <div class="section">
       <div id="selection-info" class="selection-info">
@@ -212,12 +212,6 @@
           <label>
             <input type="radio" name="export-type" value="page">
             Export entire page
-          </label>
-        </div>
-        <div class="option-row">
-          <label>
-            <input type="checkbox" id="include-nested" checked>
-            Include nested items
           </label>
         </div>
       </div>
@@ -247,8 +241,7 @@
     // Get export options
     function getExportOptions() {
       const exportType = document.querySelector('input[name="export-type"]:checked').value;
-      const includeNested = document.getElementById('include-nested').checked;
-      return { exportType, includeNested };
+      return { exportType };
     }
     
     // Update selection info display

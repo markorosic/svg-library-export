@@ -1,6 +1,6 @@
 {
-  "name": "SVG Library Exporter",
-  "id": "svg-library-exporter",
+  "name": "Design Asset Exporter",
+  "id": "design-asset-exporter",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",

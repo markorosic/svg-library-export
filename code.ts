@@ -7,7 +7,6 @@ interface ExportData {
 
 interface ExportOptions {
   exportType: 'selection' | 'page';
-  includeNested: boolean;
 }
 
 // Show the plugin UI
@@ -53,23 +52,23 @@ function convertToFileName(nodeName: string): string {
     )
     .filter(part => part.length > 0);
   
-  // Prepend "illustration-" and join with hyphens
-  return 'illustration-' + cleanParts.join('-');
+  // Join with hyphens
+  return cleanParts.join('-');
 }
 
-// Get all exportable nodes from a parent
-function getExportableNodes(node: SceneNode, includeNested: boolean): SceneNode[] {
+// Get all component nodes from a parent (recursively)
+function getComponentNodes(node: SceneNode): SceneNode[] {
   const nodes: SceneNode[] = [];
   
-  // Check if current node is exportable
-  if (node.type === 'COMPONENT' || node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'INSTANCE') {
+  // Only export components and instances
+  if (node.type === 'COMPONENT' || node.type === 'INSTANCE') {
     nodes.push(node);
   }
   
-  // If nested export is enabled and node has children, recurse
-  if (includeNested && 'children' in node) {
+  // Always recurse into children to find nested components
+  if ('children' in node) {
     for (const child of node.children) {
-      nodes.push(...getExportableNodes(child, includeNested));
+      nodes.push(...getComponentNodes(child));
     }
   }
   
@@ -96,14 +95,14 @@ async function exportSVGLibrary(options: ExportOptions) {
         return;
       }
       
-      // Get nodes from selection
+      // Get component nodes from selection
       for (const node of selection) {
-        nodesToExport.push(...getExportableNodes(node, options.includeNested));
+        nodesToExport.push(...getComponentNodes(node));
       }
     } else {
       // Export entire page
       for (const node of figma.currentPage.children) {
-        nodesToExport.push(...getExportableNodes(node, options.includeNested));
+        nodesToExport.push(...getComponentNodes(node));
       }
     }
     
