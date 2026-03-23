@@ -113,16 +113,21 @@ The plugin exports SVGs with the following settings:
 ## Project Structure
 
 ```
-figma-svg-export-plugin/
+asset-exporter/
 ├── manifest.json       # Plugin configuration
 ├── code.ts            # Main plugin logic (TypeScript)
-├── code.js            # Compiled plugin code
-├── ui.html            # Plugin user interface with download handlers
+├── ui.html            # Plugin UI with download handlers
 ├── package.json       # Node dependencies (including JSZip)
+├── package-lock.json  # Dependency lock file
 ├── tsconfig.json      # TypeScript configuration
 ├── .gitignore         # Git ignore rules
+├── CHANGELOG.md       # Project changelog
+├── USAGE.md           # Quick usage guide
+├── AGENTS.md          # AI agent guidance
 └── README.md          # This file
 ```
+
+> **Note:** `code.js` is the compiled output of `code.ts` and is not tracked in git. Run `npm run build` to generate it.
 
 ## Technical Details
 
