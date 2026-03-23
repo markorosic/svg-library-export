@@ -1,190 +1,134 @@
 # SVG Library Export
 
-A Figma plugin that exports SVG libraries from your Figma designs with automatic file naming conversion and batch download capabilities.
+A Figma plugin for exporting SVG icon and illustration libraries. It converts Figma's slash-separated component naming into clean, developer-friendly file names and supports batch download as individual files or a ZIP archive.
 
-## Overview
+---
 
-This plugin streamlines the process of exporting SVG files from Figma designs. It automatically converts Figma's hierarchical naming structure (e.g., "Category/Domain/Variant") into clean, developer-friendly file names (e.g., "illustration-category-domain-variant.svg").
+## Figma File Structure
 
-## Features
+The plugin exports **Components** and **Component Instances** only. Frames, groups, and other layer types are ignored.
 
-- **Smart Naming Convention**: Automatically converts Figma naming structure to lowercase, hyphen-separated file names
-- **Flexible Export Options**: Export selected items or entire pages
-- **Nested Export Support**: Option to include nested components and frames
-- **Batch Export**: Export multiple SVGs at once as individual files or as a ZIP archive
-- **Real-time Progress**: Visual progress indicators during export
-- **Selection Info**: Live display of selected items count and names
-- **Error Handling**: Graceful error handling with detailed feedback
+### Naming convention
 
-## Naming Convention
+Name your components using forward slashes to create hierarchy:
 
-### Figma Structure
-Use forward slashes to organize your components in Figma:
 ```
-Category / Domain / Variant / State
+Category / Subcategory / Variant
 ```
 
-### Exported File Names
-The plugin automatically converts to:
+The plugin converts each slash-delimited segment to lowercase, strips non-alphanumeric characters, and joins everything with hyphens:
+
+| Figma layer name | Exported file name |
+|---|---|
+| `Arrow / Left` | `arrow-left.svg` |
+| `Icons / Arrow / Left` | `icons-arrow-left.svg` |
+| `Social / Twitter / Filled` | `social-twitter-filled.svg` |
+| `Illustration / Empty State / No Results` | `illustration-empty-state-no-results.svg` |
+
+You can add a consistent prefix (e.g. `icon-`) using the **Prefix** field in the plugin — this is applied to every exported file without you needing to rename your Figma layers.
+
+### Recommended file structure
+
+Organise your components on a dedicated page. A flat structure (one level of components, no nesting) works best with the default settings:
+
 ```
-illustration-{category}-{domain}-{variant}.svg
+Page: Icons
+├── Component: Arrow / Left
+├── Component: Arrow / Right
+├── Component: Arrow / Up
+├── Component: Arrow / Down
+├── Component: Social / Twitter / Filled
+└── Component: Social / Twitter / Outline
 ```
 
-### Examples
+If your components contain sub-components (e.g. a button made of an icon + label), keep **Include nested components** unchecked — the plugin will export each top-level component as a single SVG without drilling into its children.
 
-| Figma Name | Exported File Name |
-|------------|-------------------|
-| `Games/Slot` | `illustration-game-slot.svg` |
-| `Casino Features/Instant Withdrawal` | `illustration-casino-features-instant-withdrawal.svg` |
-| `Promotions/Welcome Bonus/Active` | `illustration-promotions-welcome-bonus-active.svg` |
+Enable **Include nested components** only when you intentionally want every nested Component and Instance exported as its own file (useful for deeply decomposed design systems).
 
-## Development Setup
-
-### Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-- Figma desktop app
-
-### Installation
-
-1. Clone this repository:
-   ```bash
-   git clone <repository-url>
-   cd svg-library-export
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Build the plugin:
-   ```bash
-   npm run build
-   ```
-
-### Running in Figma
-
-1. Open Figma desktop app
-2. Go to Menu → Plugins → Development → Import plugin from manifest...
-3. Select the `manifest.json` file from this project
-4. The plugin will now be available in your Plugins menu
-
-### Development Workflow
-
-To automatically rebuild when files change:
-```bash
-npm run watch
-```
+---
 
 ## Usage
 
-### Basic Export
+### 1. Select what to export
 
-1. Open a Figma file
-2. Select the components, frames, or groups you want to export
-3. Run the plugin from Menu → Plugins → Development → SVG Library Exporter
-4. Choose your export options:
-   - **Export selected items**: Export only what you've selected
-   - **Export entire page**: Export all exportable items on the current page
-   - **Include nested items**: Recursively export nested components
-5. Click "Export Files" for individual SVG downloads or "Export ZIP" for a bundled archive
+- **Selected items** (default) — select one or more components on the canvas, then run the plugin. The selection info box shows what will be exported.
+- **Entire page** — exports every Component and Instance on the current page regardless of selection.
 
-### Export Options
+### 2. Configure the options
 
-#### Export Type
-- **Selected items**: Only exports the items you have selected in Figma
-- **Entire page**: Exports all components, frames, and groups on the current page
+| Option | Default | Description |
+|---|---|---|
+| **Include nested components** | Off | When on, recursively exports components nested inside your selection |
+| **Prefix** | _(empty)_ | Prepended to every file name — e.g. `icon-` produces `icon-arrow-left.svg` |
+| **ZIP name** | `svg-export` | Base name for the ZIP file — a timestamp is appended automatically |
+| **Outline text** | On | Converts text layers to vector paths for consistent cross-platform rendering |
+| **Include layer IDs** | On | Adds Figma layer names as `id` attributes in the SVG markup |
 
-#### Include Nested Items
-When enabled, the plugin will recursively traverse and export nested components within selected items.
+### 3. Export
 
-#### Export Format
-- **Export Files**: Downloads each SVG as a separate file
-- **Export ZIP**: Bundles all SVGs into a single timestamped ZIP file
+- **Export ZIP** — bundles all SVGs into a single timestamped file (e.g. `icon-library-2025-03-23T10-30-00.zip`). Recommended for large batches since browsers can block many simultaneous downloads.
+- **Export Files** — downloads each SVG as a separate file, staggered to avoid browser blocking.
 
-### SVG Export Settings
+A progress bar shows the current export status. Any items that fail to export are logged in the browser console and a warning message is shown; the remaining items are still exported.
 
-The plugin exports SVGs with the following settings:
-- **Outline text**: Text is converted to vector paths (ensures consistent rendering)
-- **Include IDs**: Layer names are included as ID attributes (useful for referencing elements)
+---
 
-## Project Structure
+## Development
+
+### Prerequisites
+
+- Node.js v16+
+- Figma desktop app
+
+### Setup
+
+```bash
+npm install
+npm run build      # compile TypeScript once
+npm run watch      # recompile on save
+```
+
+### Load in Figma
+
+1. Open Figma desktop
+2. Menu → Plugins → Development → **Import plugin from manifest…**
+3. Select `manifest.json` from this directory
+
+---
+
+## Project structure
 
 ```
 svg-library-export/
 ├── manifest.json       # Plugin configuration
-├── code.ts            # Main plugin logic (TypeScript)
-├── ui.html            # Plugin UI with download handlers
-├── package.json       # Node dependencies (including JSZip)
-├── package-lock.json  # Dependency lock file
-├── tsconfig.json      # TypeScript configuration
-├── .gitignore         # Git ignore rules
-├── CHANGELOG.md       # Project changelog
-├── USAGE.md           # Quick usage guide
-├── AGENTS.md          # AI agent guidance
-└── README.md          # This file
+├── code.ts             # Plugin logic (TypeScript source)
+├── code.js             # Compiled output — generated, not committed
+├── ui.html             # Plugin panel UI
+├── package.json
+├── tsconfig.json
+└── CHANGELOG.md
 ```
 
-> **Note:** `code.js` is the compiled output of `code.ts` and is not tracked in git. Run `npm run build` to generate it.
-
-## Technical Details
-
-### Architecture
-
-The plugin consists of two parts:
-
-1. **Plugin Code (code.ts)**:
-   - Runs in Figma's sandbox with access to the Figma API
-   - Handles node traversal, SVG export, and naming conversion
-   - Communicates with UI via postMessage
-
-2. **UI Code (ui.html)**:
-   - Runs in an iframe with access to browser APIs
-   - Handles file downloads using Blob API
-   - Creates ZIP archives using JSZip library
-
-### File Naming Algorithm
-
-1. Split Figma node name by forward slashes
-2. Trim whitespace from each part
-3. Convert to lowercase
-4. Replace non-alphanumeric characters with hyphens
-5. Remove leading/trailing hyphens
-6. Join with hyphens and prepend "illustration-"
-7. Append ".svg" extension
+---
 
 ## Troubleshooting
 
-### No items are being exported
-- Ensure you have selected components, frames, groups, or instances
-- Check that "Export selected items" is chosen if you want to export your selection
-- Verify that the items are actually exportable (not just layers)
+**Nothing is exported**
+Ensure your selection contains Components or Instances. Frames and groups alone are not exported.
 
-### Downloads not working
-- Make sure you're using a modern browser or the Figma desktop app
-- Check your browser's download settings and permissions
-- Some browsers may block multiple file downloads - try using "Export ZIP" instead
+**Unexpected files in the export**
+If sub-components you didn't intend to export appear in the output, uncheck **Include nested components** — this stops the plugin from recursing into children.
 
-### File names are incorrect
-- Verify that your Figma components follow the naming convention: `Category/Domain/Variant`
-- Check for special characters that might be converted to hyphens
-- The plugin automatically converts everything to lowercase
+**File names look wrong**
+Check the Figma layer name. Any character that is not a letter or number is replaced with a hyphen. Leading and trailing hyphens are stripped.
 
-### Plugin is slow with large exports
-- Large batches (100+ items) may take time to export
-- The progress bar shows real-time status
-- Consider exporting in smaller batches if needed
+**Browser blocking downloads**
+Switch to **Export ZIP** — a single download is far less likely to be blocked than dozens of simultaneous file downloads.
 
-### TypeScript compilation errors
-- Run `npm install` to ensure all dependencies are installed
-- Delete `node_modules` and `package-lock.json`, then run `npm install` again
-- Ensure you're using Node.js v16 or higher
+**TypeScript errors after editing**
+Run `npm install` to ensure dependencies are present, then `npm run build`.
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+---
 
 ## License
 
