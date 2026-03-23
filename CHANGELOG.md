@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Added log file exclusions (`*.log`, `npm-debug.log*`)
 
 - Updated `README.md` project structure to reflect all current files
+- Renamed project from `design-asset-exporter` to `svg-library-export` across all config and documentation files
 
 ### Added
 

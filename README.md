@@ -1,4 +1,4 @@
-# Figma SVG Export Plugin
+# SVG Library Export
 
 A Figma plugin that exports SVG libraries from your Figma designs with automatic file naming conversion and batch download capabilities.
 
@@ -51,7 +51,7 @@ illustration-{category}-{domain}-{variant}.svg
 1. Clone this repository:
    ```bash
    git clone <repository-url>
-   cd figma-svg-export-plugin
+   cd svg-library-export
    ```
 
 2. Install dependencies:
@@ -113,7 +113,7 @@ The plugin exports SVGs with the following settings:
 ## Project Structure
 
 ```
-asset-exporter/
+svg-library-export/
 ├── manifest.json       # Plugin configuration
 ├── code.ts            # Main plugin logic (TypeScript)
 ├── ui.html            # Plugin UI with download handlers

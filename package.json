@@ -1,7 +1,7 @@
 {
-  "name": "design-asset-exporter",
+  "name": "svg-library-export",
   "version": "1.0.0",
-  "description": "Design Asset Exporter - A Figma plugin to export SVG assets",
+  "description": "SVG Library Export - A Figma plugin to export SVG libraries",
   "main": "code.js",
   "scripts": {
     "build": "tsc",
